@@ -1,13 +1,18 @@
 package com.zht.springframework.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.zht.springframework.beans.PropertyValue;
 import com.zht.springframework.beans.PropertyValues;
+import com.zht.springframework.beans.factory.DisposableBean;
+import com.zht.springframework.beans.factory.InitializingBean;
 import com.zht.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.zht.springframework.beans.factory.config.BeanDefinition;
 import com.zht.springframework.beans.factory.config.BeanPostProcessor;
 import com.zht.springframework.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.sql.SQLOutput;
 
 public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
     //自定义对象，功能为封装java反射机制并创建对象
@@ -25,15 +30,44 @@ public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory impl
             //step2:
             applyPropertyValues(beanName, bean, beanDefinition);
 
+            // step3:后续增加第三步，填充bean
+            bean = initializeBean(beanName, bean, beanDefinition);
 
         }catch (Exception e){}
 
+        // 注册实现了 DisposableBean 接口的 Bean 对象
+        registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
         //bean创建完毕，由于该工厂分支为单例路线，所以把bean填充到单例容器中
         addSingleton(beanName, bean);
 
         //返回bean
         return bean;
     }
+
+
+    protected void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {
+        if (bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestoryMethodName())) {
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
+        }
+    }
+
+
+    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+        // 1. 执行 BeanPostProcessor Before 处理
+        Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
+
+        //2. 执行 Bean 对象的初始化方法
+        try {
+            invokeInitMethods(beanName, wrappedBean, beanDefinition);
+        } catch (Exception e) {
+            System.out.println("invokeInitMethods +  失败" );
+        }
+
+        // 3. 执行 BeanPostProcessor After 处理
+        wrappedBean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+        return wrappedBean;
+    }
+
 
 
     // step1的外包工作
@@ -90,20 +124,18 @@ public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory impl
     }
 
 
-    private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
-        // 1. 执行 BeanPostProcessor Before 处理
-        Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
+    private void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
+            if(bean instanceof InitializingBean){
+                ((InitializingBean) bean).afterPropertiesSet();
+            }
 
-        // 待完成内容：invokeInitMethods(beanName, wrappedBean, beanDefinition);
-        invokeInitMethods(beanName, wrappedBean, beanDefinition);
-
-        // 2. 执行 BeanPostProcessor After 处理
-        wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
-        return wrappedBean;
-    }
-
-    private void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) {
-
+            String InitMethodName = beanDefinition.getInitMethodName();
+            if(StrUtil.isNotEmpty(InitMethodName)){
+                //从bean定义中拿到bean的class就拿到了一切
+                Method initMethod = beanDefinition.getBeanClass().getMethod(InitMethodName);
+                //反射调用bean的对应方法
+                initMethod.invoke(bean);
+            }
     }
 
     @Override

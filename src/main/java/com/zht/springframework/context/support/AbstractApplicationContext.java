@@ -9,6 +9,17 @@ import com.zht.springframework.core.io.DefaultResourceLoader;
 import java.util.Map;
 
 public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
+
+    @Override
+    public void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+    }
+
+    @Override
+    public void close() {
+
+        getBeanFactory().destroySingletons();}
+
     @Override
     public void refresh() {
         //创建 BeanFactory，并加载 BeanDefinition
