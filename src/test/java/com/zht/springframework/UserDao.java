@@ -10,6 +10,7 @@ public class UserDao {
         hashMap.put("10001", "张三");
         hashMap.put("10002", "李四");
         hashMap.put("10003", "王五");
+
     }
 
     public String queryUserName(String uId) {
