@@ -2,13 +2,18 @@ package com.zht.springframework.beans.factory.support;
 import com.zht.springframework.beans.factory.config.BeanDefinition;
 import com.zht.springframework.beans.factory.config.BeanPostProcessor;
 import com.zht.springframework.beans.factory.config.ConfigurableBeanFactory;
+import com.zht.springframework.util.ClassUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory {
-
+    private ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
+    public ClassLoader getBeanClassLoader(){
+        return classLoader;
+    }
     @Override
     public Object getBean(String name) {
         return doGetBean(name ,null);

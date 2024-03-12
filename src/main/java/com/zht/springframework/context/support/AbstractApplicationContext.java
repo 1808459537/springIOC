@@ -12,7 +12,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void registerShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+
+        //  JVM最后执行的步骤
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));// lambda表达式 ，()->(),前面是参数，后面是方法，如果参数是个引用(或者无参)并且方法里面使用了该引用，->可以替换为::
     }
 
     @Override
@@ -24,11 +26,19 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     public void refresh() {
         //创建 BeanFactory，并加载 BeanDefinition
         refreshBeanFactory();
+
+
         //获取 BeanFactory
         ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 
+        //添加 ApplicationContextAwareProcessor，让继承自 ApplicationContextAware 的 Bean 对象都能感知所属的 ApplicationContext
+        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+
+
         //在 Bean 实例化之前，执行 BeanFactoryPostProcessor
         invokeBeanFactoryPostProcessors(beanFactory);
+
+
         //BeanPostProcessor 需要提前于其他 Bean 对象实例化之前执行注册操作
         registerBeanPostProcessors(beanFactory);
 

@@ -1,9 +1,13 @@
 package com.zht.springframework;
 
-import com.zht.springframework.beans.factory.DisposableBean;
-import com.zht.springframework.beans.factory.InitializingBean;
+import com.zht.springframework.beans.factory.*;
+import com.zht.springframework.context.ApplicationContext;
+import com.zht.springframework.context.ApplicationContextAware;
 
-public class UserService implements InitializingBean, DisposableBean {
+public class UserService implements BeanNameAware, BeanClassLoaderAware, ApplicationContextAware, BeanFactoryAware{
+    private ApplicationContext applicationContext;
+    private BeanFactory beanFactory;
+
 
     private String uId;
     private String company;
@@ -47,12 +51,42 @@ public class UserService implements InitializingBean, DisposableBean {
     }
 
     @Override
-    public void destroy() throws Exception {
-        System.out.println("执行：UserService.destroy");
+    public void setBeanClassLoader(ClassLoader classLoader) {
+        System.out.println("ClassLoader：" + classLoader);
     }
 
     @Override
-    public void afterPropertiesSet() {
-        System.out.println("执行：UserService.afterPropertiesSet");
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
+
+    @Override
+    public void setBeanName(String name) {
+        System.out.println("Bean Name is：" + name);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    public BeanFactory getBeanFactory() {
+        return beanFactory;
+    }
+
+//    @Override
+//    public void destroy() throws Exception {
+//        System.out.println("执行：UserService.destroy");
+//    }
+//
+//    @Override
+//    public void afterPropertiesSet() {
+//        System.out.println("执行：UserService.afterPropertiesSet");
+//    }
+
+
 }

@@ -4,15 +4,13 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zht.springframework.beans.PropertyValue;
 import com.zht.springframework.beans.PropertyValues;
-import com.zht.springframework.beans.factory.DisposableBean;
-import com.zht.springframework.beans.factory.InitializingBean;
+import com.zht.springframework.beans.factory.*;
 import com.zht.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.zht.springframework.beans.factory.config.BeanDefinition;
 import com.zht.springframework.beans.factory.config.BeanPostProcessor;
 import com.zht.springframework.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.sql.SQLOutput;
 
 public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
     //自定义对象，功能为封装java反射机制并创建对象
@@ -53,6 +51,22 @@ public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory impl
 
 
     private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+        // 感知
+        // invokeAwareMethods
+
+        if (bean instanceof Aware) {
+            if (bean instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) bean).setBeanFactory(this);
+            }
+            if (bean instanceof BeanClassLoaderAware){
+                ((BeanClassLoaderAware) bean).setBeanClassLoader(getBeanClassLoader());
+            }
+            if (bean instanceof BeanNameAware) {
+                ((BeanNameAware) bean).setBeanName(beanName);
+            }
+        }
+
+
         // 1. 执行 BeanPostProcessor Before 处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
 
