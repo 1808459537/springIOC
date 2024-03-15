@@ -36,9 +36,10 @@ public class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory impl
         // 注册实现了 DisposableBean 接口的 Bean 对象
         registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
         //bean创建完毕，由于该工厂分支为单例路线，所以把bean填充到单例容器中
-        addSingleton(beanName, bean);
 
-        //返回bean
+        if (beanDefinition.isSingleton()) {
+            addSingleton(beanName, bean);
+        }
         return bean;
     }
 

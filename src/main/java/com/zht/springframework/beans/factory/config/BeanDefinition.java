@@ -3,11 +3,33 @@ package com.zht.springframework.beans.factory.config;
 import com.zht.springframework.beans.PropertyValues;
 
 public class BeanDefinition {
+    String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
+    String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
     private Class beanClass;
     private PropertyValues propertyValues;
 
     private String initMethodName;
     private String destoryMethodName;
+
+    private String scope = SCOPE_SINGLETON;
+
+    private boolean singleton = true;
+    private boolean prototype = false;
+
+
+    public void setScope(String scope) {
+        this.scope = scope;
+        singleton = scope.equals(SCOPE_SINGLETON);
+        prototype = scope.equals(SCOPE_PROTOTYPE);
+    }
+
+    public boolean isSingleton(){
+        return singleton;
+    }
+    public String getScope() {
+        return scope;
+    }
 
     public String getInitMethodName() {
         return initMethodName;
