@@ -3,18 +3,25 @@
 
     <!--bean id="userDao" class="com.zht.springframework.UserDao" init-method="initDataMethod" destroy-method="destroyDataMethod"/>
 
-    <bean id="userService" class="com.zht.springframework.UserService">
-        <property name="uId" value="10001"/>
-        <property name="company" value="腾讯"/>
-        <property name="location" value="深圳"/>
-        <property name="userDao" ref="userDao"/>
-    </bean-->
-        <bean id="userService" class="com.zht.springframework.UserService" scope="prototype">
+        <bean id="userService" class="com.zht.springframework.UserService">
+            <property name="uId" value="10001"/>
+            <property name="company" value="腾讯"/>
+            <property name="location" value="深圳"/>
+            <property name="userDao" ref="userDao"/>
+        </bean-->
+
+        <!--bean id="userService" class="com.zht.springframework.UserService" scope="prototype">
             <property name="uId" value="10001"/>
             <property name="company" value="腾讯"/>
             <property name="location" value="深圳"/>
             <property name="userDao" ref="proxyUserDao"/>
-        </bean>
+            <bean id="proxyUserDao" class="com.zht.springframework.ProxyBeanFactory"/>
+        </bean-->
 
-        <bean id="proxyUserDao" class="com.zht.springframework.ProxyBeanFactory"/>
+    <bean class="com.zht.springframework.event.ContextRefreshedEventListener"/>
+
+    <bean class="com.zht.springframework.event.CustomEventListener"/>
+
+    <bean class="com.zht.springframework.event.ContextClosedEventListener"/>
+
 </beans>

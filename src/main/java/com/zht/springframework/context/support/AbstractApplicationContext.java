@@ -3,13 +3,24 @@ package com.zht.springframework.context.support;
 import com.zht.springframework.beans.factory.ConfigurableListableBeanFactory;
 import com.zht.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import com.zht.springframework.beans.factory.config.BeanPostProcessor;
+import com.zht.springframework.context.ApplicationEvent;
+import com.zht.springframework.context.ApplicationEventPublisher;
+import com.zht.springframework.context.ApplicationListener;
 import com.zht.springframework.context.ConfigurableApplicationContext;
+import com.zht.springframework.context.event.ApplicationEventMulticaster;
+import com.zht.springframework.context.event.ContextClosedEvent;
+import com.zht.springframework.context.event.ContextRefreshedEvent;
+import com.zht.springframework.context.event.SimpleApplicationEventMulticaster;
 import com.zht.springframework.core.io.DefaultResourceLoader;
 
+import java.util.Collection;
 import java.util.Map;
 
-public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
+public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext , ApplicationEventPublisher {
 
+    public static final String APPLICATION_EVENT_MULTICASTER_BEAN_NAME = "applicationEventMulticaster";
+
+    private ApplicationEventMulticaster applicationEventMulticaster;
     @Override
     public void registerShutdownHook() {
 
@@ -19,7 +30,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void close() {
-
+        // 关闭容器发布事件
+        publishEvent(new ContextClosedEvent(this));
+        // 销毁缓存
         getBeanFactory().destroySingletons();}
 
     @Override
@@ -42,8 +55,37 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         //BeanPostProcessor 需要提前于其他 Bean 对象实例化之前执行注册操作
         registerBeanPostProcessors(beanFactory);
 
+
+        initApplicationEventMulticaster();
+
+        registerListeners();
+
         beanFactory.preInstantiateSingletons();
+
+        finishRefresh();
     }
+
+    protected  void registerListeners(){
+        Collection<ApplicationListener> applicationListeners = getBeansOfType(ApplicationListener.class).values();
+        for (ApplicationListener listener : applicationListeners) {
+            applicationEventMulticaster.addApplicationListener(listener);
+        }
+    };
+
+    private void finishRefresh() {
+        publishEvent(new ContextRefreshedEvent(this));
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+        applicationEventMulticaster.multicastEvent(event);
+    }
+
+    protected  void initApplicationEventMulticaster(){
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+        beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, applicationEventMulticaster);
+    };
 
     private void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
         Map<String, BeanPostProcessor> beanPostProcessorMap = beanFactory.getBeansOfType(BeanPostProcessor.class);
@@ -64,24 +106,25 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     protected abstract ConfigurableListableBeanFactory getBeanFactory();
 
+
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type) {
-        return null;
+        return getBeanFactory().getBeansOfType(type);
     }
 
     @Override
     public String[] getBeanDefinitionNames() {
-        return new String[0];
+        return getBeanFactory().getBeanDefinitionNames();
     }
 
     @Override
     public Object getBean(String name) {
-        return null;
+        return getBeanFactory().getBean(name);
     }
 
     @Override
     public Object getBean(String name, Object... args) {
-        return null;
+        return getBeanFactory().getBean(name, args);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.zht.springframework;
 import com.zht.springframework.beans.factory.support.DefaultListableBeanFactory;
 import com.zht.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import com.zht.springframework.context.support.ClassPathXmlApplicationContext;
+import com.zht.springframework.event.CustomEvent;
 import org.junit.jupiter.api.Test;
 
 
@@ -71,6 +72,14 @@ class SpringframeworkApplicationTests {
         // 2. 调用代理方法
         UserService userService = applicationContext.getBean("userService", UserService.class);
         System.out.println("测试结果：" + userService.queryUserInfo());
+    }
+
+    @Test
+    public void test_event() {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+        applicationContext.publishEvent(new CustomEvent(applicationContext, 1019129009086763L, "成功了！"));
+
+        applicationContext.registerShutdownHook();
     }
 
 }
